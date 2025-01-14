@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tech Fluid Simulation Lab - Metaball Demo</title>
+
+  <!-- Futuristic or tech-like font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap">
+
+  <style>
+    /* Reset and Basic Setup */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Apply a futuristic/tech-like font */
+    body {
+      font-family: 'Share Tech Mono', monospace;
+      background: linear-gradient(120deg, #0f0f0f 40%, #2b2b2b 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      color: #dcdcdc; /* Light gray text */
+    }
+
+    /* Header */
+    header {
+      width: 100%;
+      background: #121212;
+      padding: 20px 0;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+      margin-bottom: 20px;
+      text-align: center;
+      border-bottom: 1px solid #272727;
+    }
+
+    header h1 {
+      font-size: 2em;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #00ffc8; /* Neon accent color */
+      letter-spacing: 1px;
+    }
+    header p {
+      font-size: 1em;
+      max-width: 700px;
+      margin: 0 auto;
+      line-height: 1.4;
+      color: #dcdcdc;
+    }
+
+    /* Main Container for Simulation */
+    .sim-container {
+      background-color: #1a1a1a;
+      border: 1px solid #2b2b2b;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      width: 90%;
+      max-width: 900px;
+      margin: 10px auto;
+      padding: 25px;
+    }
+
+    /* Form Groups & Labels */
+    .form-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 20px;
+      justify-content: center;
+    }
+    .form-group label {
+      font-weight: 600;
+      display: inline-block;
+      min-width: 130px;
+      text-align: right;
+      margin-right: 10px;
+      color: #80ffea;
+    }
+    .form-group select,
+    .form-group input[type="number"] {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #444;
+      border-radius: 6px;
+      min-width: 120px;
+      font-size: 1em;
+      background-color: #262626;
+      color: #dcdcdc;
+      outline: none;
+    }
+    .form-group select:focus,
+    .form-group input[type="number"]:focus {
+      border-color: #00ffc8;
+    }
+
+    /* Button Group */
+    .buttons {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    button {
+      background-color: #00ffc8;
+      color: #000;
+      border: none;
+      padding: 12px 20px;
+      margin: 0 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease, color 0.3s;
+    }
+    button:hover {
+      background-color: #00cfa0;
+      box-shadow: 0 4px 12px rgba(0,255,200,0.2);
+    }
+
+    /* Canvas & Info Box */
+    .canvas-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 15px;
+    }
+    #simulationCanvas {
+      background: #333;
+      border: 1px solid #444;
+      border-radius: 6px;
+      width: 640px;
+      height: 400px;
+      display: block;
+    }
+    .info {
+      text-align: center;
+      margin-top: 12px;
+      background: #2b2b2b;
+      padding: 10px;
+      border: 1px solid #444;
+      border-radius: 6px;
+      width: 640px;
+      max-width: 90%;
+      font-size: 0.9em;
+      line-height: 1.4;
+      color: #dcdcdc;
+    }
+
+    /* Footer */
+    footer {
+      margin-top: auto;
+      width: 100%;
+      background: #121212;
+      text-align: center;
+      padding: 15px 0;
+      font-size: 0.85em;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.5);
+      border-top: 1px solid #272727;
+    }
+    footer p {
+      max-width: 700px;
+      margin: 0 auto;
+      line-height: 1.5;
+      color: #dcdcdc;
+      opacity: 0.9;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 700px) {
+      #simulationCanvas {
+        width: 90%;
+        height: 300px;
+      }
+      .info {
+        width: 90%;
+      }
+      .form-group label {
+        text-align: left;
+        min-width: auto;
+        margin-right: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header / Title -->
+  <header>
+    <h1>Tech Fluid Simulation Lab</h1>
+    <p>
+      Experience a cutting-edge “metaball” fluid simulator that visualizes
+      how particles merge into a cohesive liquid mass under gravity and collisions.
+    </p>
+  </header>
+
+  <!-- Main Simulation Container -->
+  <div class="sim-container">
+    <!-- Configuration Form -->
+    <div class="form-group">
+      <label for="fluidSelect">Fluid Type:</label>
+      <select id="fluidSelect">
+        <option value="water" selected>Water (Low Viscosity)</option>
+        <option value="oil">Oil (Medium Viscosity)</option>
+        <option value="honey">Honey (High Viscosity)</option>
+        <option value="lava">Lava (Very High Viscosity)</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="particleCount">Particle Count:</label>
+      <!-- Default set to 20 -->
+      <input type="number" id="particleCount" value="20" min="10" max="1000" step="10"/>
+    </div>
+
+    <!-- Buttons -->
+    <div class="buttons">
+      <button id="startSimBtn">Start Simulation</button>
+      <button id="stopSimBtn">Stop</button>
+      <button id="resetSimBtn">Reset</button>
+    </div>
+
+    <!-- Canvas & Info -->
+    <div class="canvas-container">
+      <canvas id="simulationCanvas" width="640" height="400"></canvas>
+      <div class="info" id="infoBox">No simulation running.</div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>
+      © 2025 Tech Fluid Simulation Lab. 
+      This demonstration is part of our research in interactive fluid technologies.
+    </p>
+  </footer>
+
+  <!-- JavaScript for Metaball Fluid Simulation -->
+  <script>
+    //=== GLOBALS & CONSTANTS ===
+    const canvas = document.getElementById("simulationCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const fluidSelect = document.getElementById("fluidSelect");
+    const particleCountInput = document.getElementById("particleCount");
+    const infoBox = document.getElementById("infoBox");
+
+    const startSimBtn = document.getElementById("startSimBtn");
+    const stopSimBtn = document.getElementById("stopSimBtn");
+    const resetSimBtn = document.getElementById("resetSimBtn");
+
+    // Basic fluid property presets:
+    const fluidTypes = {
+      water: { color: 'blue',    viscosity: 0.01, radius: 25, threshold: 1.5 },
+      oil:   { color: '#bfa136', viscosity: 0.03, radius: 25, threshold: 2.0 },
+      honey: { color: '#c49102', viscosity: 0.08, radius: 25, threshold: 2.5 },
+      lava:  { color: '#ff3e00', viscosity: 0.15, radius: 25, threshold: 3.0 }
+    };
+
+    // Gravity and collision settings for a more dynamic effect
+    const GRAVITY = 0.5;
+    const BOUNCE_LOSS = 0.6;
+    const MAX_SPEED = 12;
+    const PARTICLE_RADIUS = 5;
+
+    let simulationId = null; // ID from requestAnimationFrame
+    let particles = [];       // array of Particle objects
+    let currentFluid = fluidTypes["water"];
+
+    //=== PARTICLE CLASS (Collision + basic physics) ===
+    class Particle {
+      constructor(x, y, vx, vy) {
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+      }
+
+      update() {
+        // apply gravity
+        this.vy += GRAVITY;
+
+        // apply “viscosity” friction
+        this.vx *= (1 - currentFluid.viscosity);
+        this.vy *= (1 - currentFluid.viscosity);
+
+        // clamp velocity
+        if (Math.abs(this.vx) > MAX_SPEED) this.vx = MAX_SPEED * Math.sign(this.vx);
+        if (Math.abs(this.vy) > MAX_SPEED) this.vy = MAX_SPEED * Math.sign(this.vy);
+
+        // move
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // collisions with walls
+        if (this.x - PARTICLE_RADIUS < 0) {
+          this.x = PARTICLE_RADIUS;
+          this.vx *= -BOUNCE_LOSS;
+        } else if (this.x + PARTICLE_RADIUS > canvas.width) {
+          this.x = canvas.width - PARTICLE_RADIUS;
+          this.vx *= -BOUNCE_LOSS;
+        }
+        if (this.y - PARTICLE_RADIUS < 0) {
+          this.y = PARTICLE_RADIUS;
+          this.vy *= -BOUNCE_LOSS;
+        } else if (this.y + PARTICLE_RADIUS > canvas.height) {
+          this.y = canvas.height - PARTICLE_RADIUS;
+          this.vy *= -BOUNCE_LOSS;
+        }
+      }
+
+      // collision with other particles (naive approach)
+      collide(other) {
+        const dx = other.x - this.x;
+        const dy = other.y - this.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        const minDist = PARTICLE_RADIUS * 2;
+
+        if (dist < minDist) {
+          // simple elastic-ish collision
+          const angle = Math.atan2(dy, dx);
+          const overlap = (minDist - dist) / 2;
+
+          // push them apart
+          this.x -= Math.cos(angle) * overlap;
+          this.y -= Math.sin(angle) * overlap;
+          other.x += Math.cos(angle) * overlap;
+          other.y += Math.sin(angle) * overlap;
+
+          // swap velocities along collision angle
+          const vx1 = this.vx * Math.cos(angle) + this.vy * Math.sin(angle);
+          const vy1 = -this.vx * Math.sin(angle) + this.vy * Math.cos(angle);
+          const vx2 = other.vx * Math.cos(angle) + other.vy * Math.sin(angle);
+          const vy2 = -other.vx * Math.sin(angle) + other.vy * Math.cos(angle);
+
+          const temp = vx1;
+          const bounceFactor = 0.8; // slightly inelastic
+
+          this.vx = vx2 * Math.cos(angle) - vy1 * Math.sin(angle);
+          this.vy = vx2 * Math.sin(angle) + vy1 * Math.cos(angle);
+          other.vx = temp * Math.cos(angle) - vy2 * Math.sin(angle);
+          other.vy = temp * Math.sin(angle) + vy2 * Math.cos(angle);
+
+          // apply bounce factor
+          this.vx *= bounceFactor;
+          this.vy *= bounceFactor;
+          other.vx *= bounceFactor;
+          other.vy *= bounceFactor;
+        }
+      }
+    }
+
+    //=== CREATE PARTICLES ===
+    function createParticles(count) {
+      const arr = [];
+      for (let i = 0; i < count; i++) {
+        // randomly spawn near top
+        const x = Math.random() * (canvas.width - PARTICLE_RADIUS * 2) + PARTICLE_RADIUS;
+        const y = Math.random() * (canvas.height / 2) + PARTICLE_RADIUS;
+        const vx = Math.random() * 2 - 1; 
+        const vy = Math.random() * 2 - 1; 
+        arr.push(new Particle(x, y, vx, vy));
+      }
+      return arr;
+    }
+
+    //=== ANIMATION LOOP ===
+    function animate() {
+      // physics update
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          particles[i].collide(particles[j]);
+        }
+        particles[i].update();
+      }
+
+      // metaball rendering
+      drawMetaballs();
+
+      // schedule next frame
+      simulationId = requestAnimationFrame(animate);
+    }
+
+    //=== METABALL RENDERING (Pixel-based) ===
+    function drawMetaballs() {
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Get image data
+      let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      let data = imageData.data;
+
+      const radius = currentFluid.radius;       // radius of influence
+      const threshold = currentFluid.threshold; // threshold for coloring
+
+      // For each pixel, compute the sum of "metaball potentials"
+      // sum = Σ( radius^2 / (dist^2 + 1) )
+      for (let py = 0; py < canvas.height; py++) {
+        for (let px = 0; px < canvas.width; px++) {
+          let sumOfField = 0;
+          for (let p of particles) {
+            const dx = p.x - px;
+            const dy = p.y - py;
+            const distSq = dx*dx + dy*dy;
+            sumOfField += radius * radius / (distSq + 1);
+          }
+          // If sum is above threshold => color pixel
+          if (sumOfField >= threshold) {
+            const index = (py * canvas.width + px) * 4;
+            const c = hexToRgb(currentFluid.color);
+            data[index + 0] = c.r; 
+            data[index + 1] = c.g; 
+            data[index + 2] = c.b; 
+            data[index + 3] = 255; 
+          }
+        }
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+    }
+
+    //=== UTILITY: Convert HEX/Color to {r,g,b} ===
+    function hexToRgb(hex) {
+      // If it's a valid hex like "#abc" or "#aabbcc"
+      if (hex.startsWith('#')) {
+        hex = hex.replace(/^#/, '');
+        let bigint = parseInt(hex, 16);
+
+        if (hex.length === 3) {
+          // short hex #abc => expand
+          const r = (bigint >> 8) & 0xF;
+          const g = (bigint >> 4) & 0xF;
+          const b = bigint & 0xF;
+          return {
+            r: (r << 4) | r,
+            g: (g << 4) | g,
+            b: (b << 4) | b
+          };
+        } else if (hex.length === 6) {
+          // standard 6-digit hex
+          const r = (bigint >> 16) & 255;
+          const g = (bigint >> 8) & 255;
+          const b = bigint & 255;
+          return { r, g, b };
+        }
+      }
+      // If it’s something like “blue” or a CSS color name, fallback
+      let ctx2 = document.createElement('canvas').getContext('2d');
+      ctx2.fillStyle = hex;
+      let col = ctx2.fillStyle; // will get the computed color in #rrggbb
+      if (col[0] === '#') {
+        hex = col.slice(1);
+        let bigint = parseInt(hex, 16);
+        let r = (bigint >> 16) & 255;
+        let g = (bigint >> 8) & 255;
+        let b = bigint & 255;
+        return { r, g, b };
+      }
+      // fallback to white
+      return { r: 255, g: 255, b: 255 };
+    }
+
+    //=== EVENT HANDLERS ===
+    startSimBtn.addEventListener("click", () => {
+      if (simulationId) return; // already running
+
+      const selectedFluid = fluidSelect.value;
+      currentFluid = fluidTypes[selectedFluid];
+
+      const count = parseInt(particleCountInput.value, 10) || 20;
+      particles = createParticles(count);
+
+      infoBox.textContent = `Simulating ${count} ${selectedFluid.toUpperCase()} metaballs (viscosity: ${currentFluid.viscosity}, threshold: ${currentFluid.threshold}).`;
+      simulationId = requestAnimationFrame(animate);
+    });
+
+    stopSimBtn.addEventListener("click", () => {
+      if (simulationId) {
+        cancelAnimationFrame(simulationId);
+        simulationId = null;
+        infoBox.textContent = `Simulation paused (metaballs frozen).`;
+      }
+    });
+
+    resetSimBtn.addEventListener("click", () => {
+      if (simulationId) {
+        cancelAnimationFrame(simulationId);
+        simulationId = null;
+      }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles = [];
+      infoBox.textContent = "No simulation running.";
+    });
+  </script>
+</body>
+</html>
